@@ -1,5 +1,6 @@
 #ifndef _KERNEL_H
 #define _KERNEL_H
+#include "cuda_to_hip.h"
 
 __global__ void dvelcx(float* u1,    float* v1,    float* w1,    float* xx,  float* yy, float* zz, float* xy, float* xz, float* yz,
                        float* dcrjx, float* dcrjy, float* dcrjz, float* d_1, int s_i,   int e_i);
@@ -30,5 +31,10 @@ __global__ void addkinsrc_cu(int i, int dim,    int* psrc,  int npsrc, float* mu
                           float* axx, float* ayy,    float* azz, float* axz, float* ayz, float* axy,
                           float* xx,  float* yy,     float* zz,  float* xy,  float* yz,  float* xz, 
                           float *mom);
+
+void addkinsrc_H(int i,   int dim,    int* psrc,  int npsrc,  cudaStream_t St, float* mu,
+              float* axx, float* ayy,    float* azz, float* axz, float* ayz, float* axy,
+              float* xx,  float* yy,     float* zz,  float* xy,  float* yz,  float* xz,
+              float* mom);
 
 #endif

@@ -7,7 +7,7 @@
 //#define BLOCK_SIZE_Z 250
 //#define BLOCK_SIZE_Z 320
 //#define BLOCK_SIZE_Z 400
-#define align 32
+#define awp_align 32
 #define loop  1 
 
 #define Both  0

@@ -5,10 +5,11 @@
 * all pmcl3d data types are defined here                                       * 
 ********************************************************************************
 */
-#include <cuda.h>
-#include <cuda_runtime.h>
+
 #include <mpi.h>
+#include "cuda_to_hip.h"
 #include "pmcl3d_cons.h"
+#include "kernel.h"
 
 #ifdef __RESTRICT 
 #define RESTRICT restrict 

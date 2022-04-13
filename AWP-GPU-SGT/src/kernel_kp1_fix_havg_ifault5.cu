@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "kernel.h"
 #include "pmcl3d_cons.h"
+#include "cuda_to_hip.h"
 
 __constant__ float d_c1;
 __constant__ float d_c2;

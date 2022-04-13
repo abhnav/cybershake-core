@@ -173,7 +173,7 @@ void addsrc(int i,      float DH,   float DT,   int NST,    int npsrc,  int READ
   {
      idx = psrc[j*dim]   + 1 + 4*loop;
      idy = psrc[j*dim+1] + 1 + 4*loop;
-     idz = psrc[j*dim+2] + align - 1;
+     idz = psrc[j*dim+2] + awp_align - 1;
 	 printf("Adding source at array indices (%d, %d, %d)\n", idx, idy, idz);
      if(igreen == -1)
      {
@@ -204,22 +204,22 @@ void addsrc(int i,      float DH,   float DT,   int NST,    int npsrc,  int READ
      }
      else if(igreen == 4){
         tmp = vtst1*axx[j*READ_STEP+i];
-        xz[idx][idy][nzt+align-1] = tmp;
+        xz[idx][idy][nzt+awp_align-1] = tmp;
         tmp = tmp*2;   
-        xz[idx][idy][nzt+align] = tmp - xz[idx][idy][nzt+align-2];   
-        xz[idx][idy][nzt+align+1] = tmp - xz[idx][idy][nzt+align-3];   
+        xz[idx][idy][nzt+awp_align] = tmp - xz[idx][idy][nzt+awp_align-2];   
+        xz[idx][idy][nzt+awp_align+1] = tmp - xz[idx][idy][nzt+awp_align-3];   
      }
      else if(igreen == 5){
         tmp = vtst1*ayy[j*READ_STEP+i];
-        yz[idx][idy][nzt+align-1] = tmp;
+        yz[idx][idy][nzt+awp_align-1] = tmp;
         tmp = tmp*2;   
-        yz[idx][idy][nzt+align] = tmp - yz[idx][idy][nzt+align-2];   
-        yz[idx][idy][nzt+align+1] = tmp - yz[idx][idy][nzt+align-3];   
+        yz[idx][idy][nzt+awp_align] = tmp - yz[idx][idy][nzt+awp_align-2];   
+        yz[idx][idy][nzt+awp_align+1] = tmp - yz[idx][idy][nzt+awp_align-3];   
      }
      else if(igreen == 6){
         tmp = 2.0*vtst1*azz[j*READ_STEP+i];
-        zz[idx][idy][nzt+align] = tmp - zz[idx][idy][nzt+align-1];   
-        zz[idx][idy][nzt+align+1] = tmp - zz[idx][idy][nzt+align-2];   
+        zz[idx][idy][nzt+awp_align] = tmp - zz[idx][idy][nzt+awp_align-1];   
+        zz[idx][idy][nzt+awp_align+1] = tmp - zz[idx][idy][nzt+awp_align-2];   
      }
 /*
      printf("xx=%1.6g\n",xx[idx][idy][idz]);

@@ -36,11 +36,11 @@ void mediaswap(Grid3D d1, Grid3D mu,     Grid3D lam,    Grid3D qp,     Grid3D qs
 		{
 	        	for(i=1+4*loop;i<nxt+3+4*loop;i++)
         	  	  for(j=2+4*loop;j<2+8*loop;j++)
-            	    	    for(k=align-1;k<nzt+align+1;k++)
+            	    	    for(k=awp_align-1;k<nzt+awp_align+1;k++)
 			    {
             			idx = i-1-4*loop;
             			idy = (j-2-4*loop)*5;
-	            		idz = k-align+1;
+	            		idz = k-awp_align+1;
         	    		mediaF_S[idx*5*(4*loop)*(nzt+2)+idy*(nzt+2)+idz] = d1[i][j][k];
             			idy++;
             			mediaF_S[idx*5*(4*loop)*(nzt+2)+idy*(nzt+2)+idz] = mu[i][j][k];
@@ -57,11 +57,11 @@ void mediaswap(Grid3D d1, Grid3D mu,     Grid3D lam,    Grid3D qp,     Grid3D qs
 		{
         		for(i=1+4*loop;i<nxt+3+4*loop;i++)
           	  	  for(j=nyt+2;j<nyt+2+4*loop;j++)
-            	    	    for(k=align-1;k<nzt+align+1;k++)
+            	    	    for(k=awp_align-1;k<nzt+awp_align+1;k++)
 			    {
                 		idx = i-1-4*loop;
 	                	idy = (j-nyt-2)*5;
-        	        	idz = k-align+1;
+        	        	idz = k-awp_align+1;
                 		mediaB_S[idx*5*(4*loop)*(nzt+2)+idy*(nzt+2)+idz] = d1[i][j][k];
                 		idy++;
                 		mediaB_S[idx*5*(4*loop)*(nzt+2)+idy*(nzt+2)+idz] = mu[i][j][k];
@@ -81,11 +81,11 @@ void mediaswap(Grid3D d1, Grid3D mu,     Grid3D lam,    Grid3D qp,     Grid3D qs
 		{
                 	for(i=1+4*loop;i<nxt+3+4*loop;i++)
                   	  for(j=2;j<2+4*loop;j++)
-                    	    for(k=align-1;k<nzt+align+1;k++)
+                    	    for(k=awp_align-1;k<nzt+awp_align+1;k++)
 		    	    {
                         	idx = i-1-4*loop;
                         	idy = (j-2)*5;
-                        	idz = k-align+1;
+                        	idz = k-awp_align+1;
                         	d1[i][j][k]  = mediaF_R[idx*5*(4*loop)*(nzt+2)+idy*(nzt+2)+idz];
                         	idy++;
                         	mu[i][j][k]  = mediaF_R[idx*5*(4*loop)*(nzt+2)+idy*(nzt+2)+idz];
@@ -102,11 +102,11 @@ void mediaswap(Grid3D d1, Grid3D mu,     Grid3D lam,    Grid3D qp,     Grid3D qs
 		{
                         for(i=1+4*loop;i<nxt+3+4*loop;i++)
                           for(j=nyt+2+4*loop;j<nyt+2+8*loop;j++)
-                            for(k=align-1;k<nzt+align+1;k++)
+                            for(k=awp_align-1;k<nzt+awp_align+1;k++)
                             {   
                                 idx = i-1-4*loop;
                                 idy = (j-nyt-2-4*loop)*5;
-                                idz = k-align+1;
+                                idz = k-awp_align+1;
                                 d1[i][j][k]  = mediaB_R[idx*5*(4*loop)*(nzt+2)+idy*(nzt+2)+idz];
                                 idy++;
                                 mu[i][j][k]  = mediaB_R[idx*5*(4*loop)*(nzt+2)+idy*(nzt+2)+idz];
@@ -139,11 +139,11 @@ void mediaswap(Grid3D d1, Grid3D mu,     Grid3D lam,    Grid3D qp,     Grid3D qs
                 {
                         for(i=2+4*loop;i<2+8*loop;i++)
                           for(j=2;j<nyt+2+8*loop;j++)
-                            for(k=align-1;k<nzt+align+1;k++)
+                            for(k=awp_align-1;k<nzt+awp_align+1;k++)
                             {
                                 idx = (i-2-4*loop)*5;
                                 idy = j-2;
-                                idz = k-align+1;
+                                idz = k-awp_align+1;
                                 mediaL_S[idx*(nyt+8*loop)*(nzt+2)+idy*(nzt+2)+idz] = d1[i][j][k];
                                 idx++;
                                 mediaL_S[idx*(nyt+8*loop)*(nzt+2)+idy*(nzt+2)+idz] = mu[i][j][k];
@@ -160,11 +160,11 @@ void mediaswap(Grid3D d1, Grid3D mu,     Grid3D lam,    Grid3D qp,     Grid3D qs
                 {
                         for(i=nxt+2;i<nxt+2+4*loop;i++)
                           for(j=2;j<nyt+2+8*loop;j++)
-                            for(k=align-1;k<nzt+align+1;k++)
+                            for(k=awp_align-1;k<nzt+awp_align+1;k++)
                             {
                                 idx = (i-nxt-2)*5;
                                 idy = j-2;
-                                idz = k-align+1;
+                                idz = k-awp_align+1;
                                 mediaR_S[idx*(nyt+8*loop)*(nzt+2)+idy*(nzt+2)+idz] = d1[i][j][k];
                                 idx++;
                                 mediaR_S[idx*(nyt+8*loop)*(nzt+2)+idy*(nzt+2)+idz] = mu[i][j][k];
@@ -184,11 +184,11 @@ void mediaswap(Grid3D d1, Grid3D mu,     Grid3D lam,    Grid3D qp,     Grid3D qs
                 {
                         for(i=2;i<2+4*loop;i++)
                           for(j=2;j<nyt+2+8*loop;j++)
-                            for(k=align-1;k<nzt+align+1;k++)
+                            for(k=awp_align-1;k<nzt+awp_align+1;k++)
                             {
                                 idx = (i-2)*5;
                                 idy = j-2;
-                                idz = k-align+1;
+                                idz = k-awp_align+1;
                                 d1[i][j][k]  = mediaL_R[idx*(nyt+8*loop)*(nzt+2)+idy*(nzt+2)+idz];
                                 idx++;
                                 mu[i][j][k]  = mediaL_R[idx*(nyt+8*loop)*(nzt+2)+idy*(nzt+2)+idz];
@@ -205,11 +205,11 @@ void mediaswap(Grid3D d1, Grid3D mu,     Grid3D lam,    Grid3D qp,     Grid3D qs
                 {
                         for(i=nxt+2+4*loop;i<nxt+2+8*loop;i++)
                           for(j=2;j<nyt+2+8*loop;j++)
-                            for(k=align-1;k<nzt+align+1;k++)
+                            for(k=awp_align-1;k<nzt+awp_align+1;k++)
                             {
                                 idx = (i-nxt-2-4*loop)*5;
                                 idy = j-2;
-                                idz = k-align+1;
+                                idz = k-awp_align+1;
                                 d1[i][j][k]  = mediaR_R[idx*(nyt+8*loop)*(nzt+2)+idy*(nzt+2)+idz];
                                 idx++;
                                 mu[i][j][k]  = mediaR_R[idx*(nyt+8*loop)*(nzt+2)+idy*(nzt+2)+idz];
@@ -349,11 +349,11 @@ void Cpy2Host_VX(float* u1, float* v1, float* w1, float* h_m, int nxt, int nyt, 
         if(rank<0 || flag<1 || flag>2)
 	        return;
 
-	if(flag==Left)	d_offset = (2+4*loop)*(nyt+4+8*loop)*(nzt+2*align); 
-	if(flag==Right)	d_offset = (nxt+2)*(nyt+4+8*loop)*(nzt+2*align);
+	if(flag==Left)	d_offset = (2+4*loop)*(nyt+4+8*loop)*(nzt+2*awp_align); 
+	if(flag==Right)	d_offset = (nxt+2)*(nyt+4+8*loop)*(nzt+2*awp_align);
 	
-        h_offset = (4*loop)*(nyt+4+8*loop)*(nzt+2*align);
-        msg_size = sizeof(float)*(4*loop)*(nyt+4+8*loop)*(nzt+2*align);
+        h_offset = (4*loop)*(nyt+4+8*loop)*(nzt+2*awp_align);
+        msg_size = sizeof(float)*(4*loop)*(nyt+4+8*loop)*(nzt+2*awp_align);
         cudaMemcpyAsync(h_m,            u1+d_offset, msg_size, cudaMemcpyDeviceToHost, St);
         cudaMemcpyAsync(h_m+h_offset,   v1+d_offset, msg_size, cudaMemcpyDeviceToHost, St);
         cudaMemcpyAsync(h_m+h_offset*2, w1+d_offset, msg_size, cudaMemcpyDeviceToHost, St);
@@ -366,8 +366,8 @@ void Cpy2Host_VY(float* s_u1, float* s_v1, float* s_w1, float* h_m, int nxt, int
         if(rank<0)
                 return;
 
-        h_offset = (4*loop)*(nxt+4+8*loop)*(nzt+2*align);
-        msg_size = sizeof(float)*(4*loop)*(nxt+4+8*loop)*(nzt+2*align);
+        h_offset = (4*loop)*(nxt+4+8*loop)*(nzt+2*awp_align);
+        msg_size = sizeof(float)*(4*loop)*(nxt+4+8*loop)*(nzt+2*awp_align);
         cudaMemcpyAsync(h_m,            s_u1, msg_size, cudaMemcpyDeviceToHost, St);
         cudaMemcpyAsync(h_m+h_offset,   s_v1, msg_size, cudaMemcpyDeviceToHost, St);
         cudaMemcpyAsync(h_m+h_offset*2, s_w1, msg_size, cudaMemcpyDeviceToHost, St);
@@ -379,18 +379,18 @@ void Cpy2Device_VX(float* u1, float* v1, float* w1,        float* L_m,       flo
 {
         int d_offset, h_offset, msg_size;
 
-        h_offset = (4*loop)*(nyt+4+8*loop)*(nzt+2*align);
-        msg_size = sizeof(float)*(4*loop)*(nyt+4+8*loop)*(nzt+2*align);
+        h_offset = (4*loop)*(nyt+4+8*loop)*(nzt+2*awp_align);
+        msg_size = sizeof(float)*(4*loop)*(nyt+4+8*loop)*(nzt+2*awp_align);
 
         if(rank_L>=0){
-		d_offset = 2*(nyt+4+8*loop)*(nzt+2*align);
+		d_offset = 2*(nyt+4+8*loop)*(nzt+2*awp_align);
                 cudaMemcpyAsync(u1+d_offset, L_m,            msg_size, cudaMemcpyHostToDevice, St1);
                 cudaMemcpyAsync(v1+d_offset, L_m+h_offset,   msg_size, cudaMemcpyHostToDevice, St1);
                 cudaMemcpyAsync(w1+d_offset, L_m+h_offset*2, msg_size, cudaMemcpyHostToDevice, St1);
 	}
 
         if(rank_R>=0){
-		d_offset = (nxt+4*loop+2)*(nyt+4+8*loop)*(nzt+2*align);
+		d_offset = (nxt+4*loop+2)*(nyt+4+8*loop)*(nzt+2*awp_align);
         	cudaMemcpyAsync(u1+d_offset, R_m,            msg_size, cudaMemcpyHostToDevice, St2);
         	cudaMemcpyAsync(v1+d_offset, R_m+h_offset,   msg_size, cudaMemcpyHostToDevice, St2);
         	cudaMemcpyAsync(w1+d_offset, R_m+h_offset*2, msg_size, cudaMemcpyHostToDevice, St2);
@@ -404,8 +404,8 @@ void Cpy2Device_VY(float* u1,   float *v1,  float *w1,  float* f_u1, float* f_v1
 {
         int h_offset, msg_size;
 
-        h_offset = (4*loop)*(nxt+4+8*loop)*(nzt+2*align);
-        msg_size = sizeof(float)*(4*loop)*(nxt+4+8*loop)*(nzt+2*align);
+        h_offset = (4*loop)*(nxt+4+8*loop)*(nzt+2*awp_align);
+        msg_size = sizeof(float)*(4*loop)*(nxt+4+8*loop)*(nzt+2*awp_align);
         if(rank_F>=0){
                 cudaMemcpyAsync(f_u1, F_m,            msg_size, cudaMemcpyHostToDevice, St1);
                 cudaMemcpyAsync(f_v1, F_m+h_offset,   msg_size, cudaMemcpyHostToDevice, St1);

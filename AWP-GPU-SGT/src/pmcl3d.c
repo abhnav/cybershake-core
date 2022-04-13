@@ -14,6 +14,7 @@
 #include <math.h>
 #include <string.h>
 #include "pmcl3d.h"
+#include "cuda_to_hip.h"
 
 const double   micro = 1.0e-6;
 
@@ -513,8 +514,8 @@ rank, READ_STEP, READ_STEP_GPU, NST, IFAULT);
           MPI_Finalize();
           return(-1);
           }
-		mom = calloc(npsrc, sizeof(float));
-		CUCHK(cudaMalloc((void*) &d_mom, num_bytes));
+		mom = (float*)calloc(npsrc, sizeof(float));
+		CUCHK(cudaMalloc((void**) &d_mom, num_bytes));
 		CUCHK(cudaMemcpy(d_mom, mom, num_bytes, cudaMemcpyHostToDevice));
     }
 
@@ -558,15 +559,15 @@ rank, READ_STEP, READ_STEP_GPU, NST, IFAULT);
        cudaMemcpy(d_tpsrc,tpsrc,num_bytes,cudaMemcpyHostToDevice);
     }
 
-    d1     = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align); 
-    mu     = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
-    lam    = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
+    d1     = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align); 
+    mu     = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
+    lam    = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
     lam_mu = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, 1); 
 
     if(NVE==1)
     { 
-       qp   = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
-       qs   = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
+       qp   = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
+       qs   = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
     }
 
     time_mesh -= gethrtime();
@@ -586,8 +587,8 @@ rank, READ_STEP, READ_STEP_GPU, NST, IFAULT);
       for(j=yls;j<yre+1;j++)
       {
          float t_xl, t_xl2m;
-         t_xl             = 1.0/lam[i][j][nzt+align-1];
-         t_xl2m           = 2.0/mu[i][j][nzt+align-1] + t_xl; 
+         t_xl             = 1.0/lam[i][j][nzt+awp_align-1];
+         t_xl2m           = 2.0/mu[i][j][nzt+awp_align-1] + t_xl; 
          lam_mu[i][j][0]  = t_xl/t_xl2m;
       }
 
@@ -596,19 +597,19 @@ rank, READ_STEP, READ_STEP_GPU, NST, IFAULT);
     cudaMemset(d_lam_mu, 0, num_bytes);
     cudaMemcpy(d_lam_mu,&lam_mu[0][0][0],num_bytes,cudaMemcpyHostToDevice);
 
-    vx1  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
-    vx2  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
+    vx1  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
+    vx2  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
     if(NPC==0)
     {
 	dcrjx = Alloc1D(nxt+4+8*loop);
         dcrjy = Alloc1D(nyt+4+8*loop);
-        dcrjz = Alloc1D(nzt+2*align);
+        dcrjz = Alloc1D(nzt+2*awp_align);
 
         for(i=0;i<nxt+4+8*loop;i++)
 	   dcrjx[i]  = 1.0;
         for(j=0;j<nyt+4+8*loop;j++)
            dcrjy[j]  = 1.0;
-        for(k=0;k<nzt+2*align;k++)
+        for(k=0;k<nzt+2*awp_align;k++)
            dcrjz[k]  = 1.0;
 
         inicrj(ARBC, coord, nxt, nyt, nzt, NX, NY, ND, dcrjx, dcrjy, dcrjz);
@@ -638,7 +639,7 @@ rank, READ_STEP, READ_STEP_GPU, NST, IFAULT);
     }
 
     if(rank==0) printf("Allocate device media pointers and copy.\n");
-    num_bytes = sizeof(float)*(nxt+4+8*loop)*(nyt+4+8*loop)*(nzt+2*align);
+    num_bytes = sizeof(float)*(nxt+4+8*loop)*(nyt+4+8*loop)*(nzt+2*awp_align);
     cudaMalloc((void**)&d_d1, num_bytes);
     cudaMemset(d_d1, 0, num_bytes);
     cudaMemcpy(d_d1,&d1[0][0][0],num_bytes,cudaMemcpyHostToDevice);
@@ -671,45 +672,45 @@ rank, READ_STEP, READ_STEP_GPU, NST, IFAULT);
         cudaMalloc((void**)&d_dcrjy, num_bytes);
         cudaMemset(d_dcrjy, 0, num_bytes);
         cudaMemcpy(d_dcrjy,dcrjy,num_bytes,cudaMemcpyHostToDevice);
-        num_bytes = sizeof(float)*(nzt+2*align);
+        num_bytes = sizeof(float)*(nzt+2*awp_align);
         cudaMalloc((void**)&d_dcrjz, num_bytes);
         cudaMemset(d_dcrjz, 0, num_bytes);
         cudaMemcpy(d_dcrjz,dcrjz,num_bytes,cudaMemcpyHostToDevice);
     }
 
     if(rank==0) printf("Allocate host velocity and stress pointers.\n");
-    u1  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
-    v1  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
-    w1  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
-    xx  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
-    yy  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
-    zz  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
-    xy  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
-    yz  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
-    xz  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
+    u1  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
+    v1  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
+    w1  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
+    xx  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
+    yy  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
+    zz  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
+    xy  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
+    yz  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
+    xz  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
     if(NVE==1)
     {
-        r1  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
-        r2  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
-        r3  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
-        r4  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
-        r5  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
-        r6  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
+        r1  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
+        r2  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
+        r3  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
+        r4  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
+        r5  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
+        r6  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
     }
 
     if(IGREEN != -1)
     {
-        sg1  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
-        sg2  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*align);
+        sg1  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
+        sg2  = Alloc3D(nxt+4+8*loop, nyt+4+8*loop, nzt+2*awp_align);
         for(i=2+4*loop;i<nxt+2+4*loop;i++)
           for(j=2+4*loop;j<nyt+2+4*loop;j++)
-            for(k=align;k<nzt+align;k++)
+            for(k=awp_align;k<nzt+awp_align;k++)
             {
               sg1[i][j][k]=(1./lam[i][j][k]+1./mu[i][j][k])/(1./mu[i][j][k]*(3.0/lam[i][j][k]+2.0/mu[i][j][k]));   
               sg2[i][j][k]=-1./lam[i][j][k]/(2.0/mu[i][j][k]*(3.0/lam[i][j][k]+2.0/mu[i][j][k]));
             }
 
-        num_bytes = sizeof(float)*(nxt+4+8*loop)*(nyt+4+8*loop)*(nzt+2*align);
+        num_bytes = sizeof(float)*(nxt+4+8*loop)*(nyt+4+8*loop)*(nzt+2*awp_align);
         cudaMalloc((void**)&d_sg1, num_bytes);
         cudaMemset(d_sg1, 0, num_bytes);
         cudaMemcpy(d_sg1,&sg1[0][0][0],num_bytes,cudaMemcpyHostToDevice);
@@ -729,7 +730,7 @@ rank, READ_STEP, READ_STEP_GPU, NST, IFAULT);
     }
 
     if(rank==0) printf("Allocate device velocity and stress pointers and copy.\n");
-    num_bytes = sizeof(float)*(nxt+4+8*loop)*(nyt+4+8*loop)*(nzt+2*align);
+    num_bytes = sizeof(float)*(nxt+4+8*loop)*(nyt+4+8*loop)*(nzt+2*awp_align);
     cudaMalloc((void**)&d_u1, num_bytes);
     cudaMemset(d_u1, 0, num_bytes);
     cudaMemcpy(d_u1,&u1[0][0][0],num_bytes,cudaMemcpyHostToDevice);
@@ -788,7 +789,7 @@ rank, READ_STEP, READ_STEP_GPU, NST, IFAULT);
       cudaMallocHost((void**)&tmp_sgtBuf,sgt_numsta*6*sizeof(float));
       cudaMallocHost((void**)&sgtBuf,sgt_numsta*6*sizeof(float)*WRITE_STEP);
     }
-    num_bytes = sizeof(float)*3*(4*loop)*(nyt+4+8*loop)*(nzt+2*align);
+    num_bytes = sizeof(float)*3*(4*loop)*(nyt+4+8*loop)*(nzt+2*awp_align);
     cudaMallocHost((void**)&SL_vel, num_bytes);
     cudaMemset(SL_vel, 0, num_bytes);
     cudaMallocHost((void**)&SR_vel, num_bytes);
@@ -797,7 +798,7 @@ rank, READ_STEP, READ_STEP_GPU, NST, IFAULT);
     cudaMemset(RL_vel, 0, num_bytes);
     cudaMallocHost((void**)&RR_vel, num_bytes);
     cudaMemset(RR_vel, 0, num_bytes);
-    num_bytes = sizeof(float)*3*(4*loop)*(nxt+4+8*loop)*(nzt+2*align);
+    num_bytes = sizeof(float)*3*(4*loop)*(nxt+4+8*loop)*(nzt+2*awp_align);
     cudaMallocHost((void**)&SF_vel, num_bytes);
     cudaMemset(SF_vel, 0, num_bytes);
     cudaMallocHost((void**)&SB_vel, num_bytes);
@@ -806,7 +807,7 @@ rank, READ_STEP, READ_STEP_GPU, NST, IFAULT);
     cudaMemset(RF_vel, 0, num_bytes);
     cudaMallocHost((void**)&RB_vel, num_bytes);
     cudaMemset(RB_vel, 0, num_bytes);
-    num_bytes = sizeof(float)*(4*loop)*(nxt+4+8*loop)*(nzt+2*align);
+    num_bytes = sizeof(float)*(4*loop)*(nxt+4+8*loop)*(nzt+2*awp_align);
     cudaMalloc((void**)&d_f_u1, num_bytes);
     cudaMemset(d_f_u1, 0, num_bytes);
     cudaMalloc((void**)&d_f_v1, num_bytes);
@@ -819,8 +820,8 @@ rank, READ_STEP, READ_STEP_GPU, NST, IFAULT);
     cudaMemset(d_b_v1, 0, num_bytes);
     cudaMalloc((void**)&d_b_w1, num_bytes);
     cudaMemset(d_b_w1, 0, num_bytes);
-    msg_v_size_x = 3*(4*loop)*(nyt+4+8*loop)*(nzt+2*align);
-    msg_v_size_y = 3*(4*loop)*(nxt+4+8*loop)*(nzt+2*align);
+    msg_v_size_x = 3*(4*loop)*(nyt+4+8*loop)*(nzt+2*awp_align);
+    msg_v_size_y = 3*(4*loop)*(nxt+4+8*loop)*(nzt+2*awp_align);
     SetDeviceConstValue(DH, DT, nxt, nyt, nzt);
     cudaStreamCreate(&stream_1);
     cudaStreamCreate(&stream_2);
@@ -890,8 +891,8 @@ rank, READ_STEP, READ_STEP_GPU, NST, IFAULT);
 int i_,j_,k_,pos;
     i_=2+4*loop;
     j_=2+4*loop;
-    k_=align;
-    pos = i_*(nyt+4+8*loop)*(nzt+2*align)+j_*(nzt+2*align)+k_;
+    k_=awp_align;
+    pos = i_*(nyt+4+8*loop)*(nzt+2*awp_align)+j_*(nzt+2*awp_align)+k_;
 printf("xx,yy,zz,xy,xz,yz=%f,%f,%f,%f,%f,%f\naxx,yy,zz,xy,xz,yz=%f,%f,%f,%f,%f,%f\n",
       xx[i_][j_][k_],yy[i_][j_][k_],zz[i_][j_][k_],xy[i_][j_][k_],xz[i_][j_][k_],yz[i_][j_][k_],
       taxx[cur_step],tayy[cur_step],tazz[cur_step],taxy[cur_step],taxz[cur_step],tayz[cur_step]);
@@ -961,7 +962,7 @@ printf("xx,yy,zz,xy,xz,yz=%f,%f,%f,%f,%f,%f\naxx,yy,zz,xy,xz,yz=%f,%f,%f,%f,%f,%
          cudaThreadSynchronize();
  
          if(cur_step%NTISKP == 0){
-          num_bytes = sizeof(float)*(nxt+4+8*loop)*(nyt+4+8*loop)*(nzt+2*align);
+          num_bytes = sizeof(float)*(nxt+4+8*loop)*(nyt+4+8*loop)*(nzt+2*awp_align);
           cudaMemcpy(&u1[0][0][0],d_u1,num_bytes,cudaMemcpyDeviceToHost);
           cudaMemcpy(&v1[0][0][0],d_v1,num_bytes,cudaMemcpyDeviceToHost);
           cudaMemcpy(&w1[0][0][0],d_w1,num_bytes,cudaMemcpyDeviceToHost);
@@ -969,17 +970,17 @@ printf("xx,yy,zz,xy,xz,yz=%f,%f,%f,%f,%f,%f\naxx,yy,zz,xy,xz,yz=%f,%f,%f,%f,%f,%
           idtmp = idtmp*rec_nxt*rec_nyt*rec_nzt;
           tmpInd = idtmp;
           //if(rank==0) printf("idtmp=%ld\n", idtmp);
-          // surface: k=nzt+align-1;
-          for(k=nzt+align-1 - rec_nbgz; k>=nzt+align-1 - rec_nedz; k=k-NSKPZ)
+          // surface: k=nzt+awp_align-1;
+          for(k=nzt+awp_align-1 - rec_nbgz; k>=nzt+awp_align-1 - rec_nedz; k=k-NSKPZ)
             for(j=2+4*loop + rec_nbgy; j<=2+4*loop + rec_nedy; j=j+NSKPY)
               for(i=2+4*loop + rec_nbgx; i<=2+4*loop + rec_nedx; i=i+NSKPX)
               {
                 //idx = (i-2-4*loop)/NSKPX;
                 //idy = (j-2-4*loop)/NSKPY;
-                //idz = ((nzt+align-1) - k)/NSKPZ;
+                //idz = ((nzt+awp_align-1) - k)/NSKPZ;
                 //tmpInd = idtmp + idz*rec_nxt*rec_nyt + idy*rec_nxt + idx;
                 //if(rank==0) printf("%ld:%d,%d,%d\t",tmpInd,i,j,k);
-                printf("%d) Writing value for local point (%d, %d, %d), which corresponds to array index (%d, %d, %d)\n", rank, i-(2+4*loop), j-(2+4*loop), (-1*k)+(nzt+align-1), i, j, k);
+                printf("%d) Writing value for local point (%d, %d, %d), which corresponds to array index (%d, %d, %d)\n", rank, i-(2+4*loop), j-(2+4*loop), (-1*k)+(nzt+awp_align-1), i, j, k);
                 Bufx[tmpInd] = u1[i][j][k];
                 Bufy[tmpInd] = v1[i][j][k];
                 Bufz[tmpInd] = w1[i][j][k];
@@ -1026,7 +1027,7 @@ printf("xx,yy,zz,xy,xz,yz=%f,%f,%f,%f,%f,%f\naxx,yy,zz,xy,xz,yz=%f,%f,%f,%f,%f,%
           if(rank==0){
             i = ND+2+4*loop;
             j = i;
-            k = nzt+align-1-ND;
+            k = nzt+awp_align-1-ND;
             fprintf(fchk,"%ld :\t%e\t%e\t%e\n",cur_step,u1[i][j][k],v1[i][j][k],w1[i][j][k]);
             fflush(fchk);
           }
@@ -1095,7 +1096,7 @@ printf("xx,yy,zz,xy,xz,yz=%f,%f,%f,%f,%f,%f\naxx,yy,zz,xy,xz,yz=%f,%f,%f,%f,%f,%
                        d_sg1,         d_sg2,     d_mu,   sgt_numsta, d_sgt_sta, d_sgtBuf,
                        stream_i,      nzt,       SGT_BLOCK_SIZE,    SGT_NUMBLOCKS);
             cudaThreadSynchronize();
-            //num_bytes = sizeof(float)*(nxt+4+8*loop)*(nyt+4+8*loop)*(nzt+2*align);
+            //num_bytes = sizeof(float)*(nxt+4+8*loop)*(nyt+4+8*loop)*(nzt+2*awp_align);
             num_bytes = sizeof(float)*sgt_numsta*6;
             idtmp = (cur_step/NTISKP_SGT-1)%WRITE_STEP;
             idtmp *= sgt_numsta*6;
@@ -1113,21 +1114,21 @@ printf("xx,yy,zz,xy,xz,yz=%f,%f,%f,%f,%f,%f\naxx,yy,zz,xy,xz,yz=%f,%f,%f,%f,%f,%
          else cudaThreadSynchronize();
          
          if(cur_step%NTISKP == 0){
-          num_bytes = sizeof(float)*(nxt+4+8*loop)*(nyt+4+8*loop)*(nzt+2*align);
+          num_bytes = sizeof(float)*(nxt+4+8*loop)*(nyt+4+8*loop)*(nzt+2*awp_align);
           cudaMemcpy(&u1[0][0][0],d_u1,num_bytes,cudaMemcpyDeviceToHost);
           cudaMemcpy(&v1[0][0][0],d_v1,num_bytes,cudaMemcpyDeviceToHost);
           cudaMemcpy(&w1[0][0][0],d_w1,num_bytes,cudaMemcpyDeviceToHost);
           idtmp = ((cur_step/NTISKP+WRITE_STEP-1)%WRITE_STEP);
           idtmp = idtmp*rec_nxt*rec_nyt*rec_nzt;
           tmpInd = idtmp;
-          // surface: k=nzt+align-1;
-          for(k=nzt+align-1 - rec_nbgz; k>=nzt+align-1 - rec_nedz; k=k-NSKPZ)
+          // surface: k=nzt+awp_align-1;
+          for(k=nzt+awp_align-1 - rec_nbgz; k>=nzt+awp_align-1 - rec_nedz; k=k-NSKPZ)
             for(j=2+4*loop + rec_nbgy; j<=2+4*loop + rec_nedy; j=j+NSKPY)
               for(i=2+4*loop + rec_nbgx; i<=2+4*loop + rec_nedx; i=i+NSKPX)
               {
                 //idx = (i-2-4*loop)/NSKPX;
                 //idy = (j-2-4*loop)/NSKPY;
-                //idz = ((nzt+align-1) - k)/NSKPZ;
+                //idz = ((nzt+awp_align-1) - k)/NSKPZ;
                 //tmpInd = idtmp + idz*rec_nxt*rec_nyt + idy*rec_nxt + idx;
                 Bufx[tmpInd] = u1[i][j][k];
                 Bufy[tmpInd] = v1[i][j][k];
@@ -1158,7 +1159,7 @@ printf("xx,yy,zz,xy,xz,yz=%f,%f,%f,%f,%f,%f\naxx,yy,zz,xy,xz,yz=%f,%f,%f,%f,%f,%
           if(rank==0){
             i = ND+2+4*loop;
             j = i;
-            k = nzt+align-1-ND;
+            k = nzt+awp_align-1-ND;
             fprintf(fchk,"%ld :\t%e\t%e\t%e\n",cur_step,u1[i][j][k],v1[i][j][k],w1[i][j][k]);
             fflush(fchk);
           }
