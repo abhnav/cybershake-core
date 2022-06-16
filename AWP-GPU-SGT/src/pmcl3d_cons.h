@@ -3,10 +3,11 @@
 //#define BLOCK_SIZE_Z 256
 //#define BLOCK_SIZE_Z 200
 //#define BLOCK_SIZE_Z 288
-#define BLOCK_SIZE_Z 252
+//#define BLOCK_SIZE_Z 252
 //#define BLOCK_SIZE_Z 250
 //#define BLOCK_SIZE_Z 320
 //#define BLOCK_SIZE_Z 400
+#define BLOCK_SIZE_Z 200
 #define awp_align 32
 #define loop  1 
 
