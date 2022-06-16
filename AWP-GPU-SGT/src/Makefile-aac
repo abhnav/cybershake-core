@@ -1,0 +1,69 @@
+CUDA_HOME = $(subst bin/hipcc,,$(shell which hipcc))
+MPI_HOME=$(dir $(shell which mpicc))../
+
+ROCM_PATH?= $(wildcard /opt/rocm/)
+HIP_PATH?= $(wildcard $(ROCM_PATH)/hip)
+HIP_PLATFORM=$(shell $(HIP_PATH)/bin/hipconfig --platform)
+CPPFLAGS += $(shell $(HIP_PATH)/bin/hipconfig --cpp_config)
+
+HIPCC=$(HIP_PATH)/bin/hipcc
+HIPLIB=$(HIP_PATH)/lib
+ROCLIB=$(ROCM_PATH)/lib
+
+# export OMPI_CXX=amdclang
+#
+CC      = mpic++
+#LD      = mpic++
+#CFLAGS = -O3 -g -D__HIP -x hip
+
+#CC      = $(HIPCC)
+LD      = $(HIPCC)
+
+#LDFLAGS = -g -D__HIP  -L$(MPI_HOME)/lib -L"/opt/rocm-4.5.0/hip/lib" -O3 -lgcc_s -lgcc -lpthread -lm -lrt
+LDFLAGS = -Wl,-Bsymbolic-functions -Wl,-z,relro -I/usr/include/mpich -L/usr/lib/x86_64-linux-gnu -lmpichcxx -lmpich
+#CFLAGS = -O3 -g -D__HCC__ -D__HIP_PLATFORM_HCC__
+#CFLAGS = -O3 -g -D__HIP -D__HCC__ -D__HIP_PLATFORM_HCC__
+CFLAGS = -O3 -g -D__HIP
+GFLAGS = $(HIPCC) -D__HIP -x hip
+
+INCDIR  = -I$(MPI_HOME)/include $(CPPFLAGS)
+OBJECTS = command.o pmcl3d.o grid.o source.o mesh.o cerjan.o swap.o io.o sgt.o kernel.o
+
+pmcl3d: $(OBJECTS)
+	[ -d bin ] || mkdir -p bin
+	$(LD) $(LDFLAGS) $(INCDIR) -o   pmcl3d  $(OBJECTS)
+	cp pmcl3d ./bin/
+
+pmcl3d.o:       pmcl3d.c
+	$(CC) $(CFLAGS) $(INCDIR) -c -o pmcl3d.o        pmcl3d.c
+
+command.o:      command.c
+	$(CC) $(CFLAGS) $(INCDIR) -c -o command.o       command.c
+
+io.o:     io.c
+	$(CC) $(CFLAGS) $(INCDIR) -c -o io.o      io.c
+
+sgt.o:          sgt.c
+	$(CC) $(CFLAGS) $(INCDIR) -c -o sgt.o           sgt.c
+
+grid.o:         grid.c
+	$(CC) $(CFLAGS) $(INCDIR) -c -o grid.o          grid.c
+
+source.o:       source.c
+	$(CC) $(CFLAGS) $(INCDIR) -c -o source.o        source.c
+
+mesh.o:         mesh.c
+	$(CC) $(CFLAGS) $(INCDIR) -c -o mesh.o          mesh.c
+
+cerjan.o:       cerjan.c
+	$(CC) $(CFLAGS) $(INCDIR) -c -o cerjan.o        cerjan.c
+
+swap.o:         swap.c
+	$(CC) $(CFLAGS) $(INCDIR) -c -o swap.o          swap.c
+
+kernel.o:       kernel.cu
+	$(GFLAGS) $(INCDIR) -c -o       kernel.o        kernel.cu
+
+clean:
+	rm *.o
+
