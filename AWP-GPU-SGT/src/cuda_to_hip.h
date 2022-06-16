@@ -1,6 +1,6 @@
 #ifdef __HIP
 #include <hip/hip_runtime.h>
-#include <hip/hip_ext.h>
+//#include <hip/hip_ext.h>
 #define cudaBindTexture hipBindTexture
 #define cudaDeviceSynchronize hipDeviceSynchronize
 #define cudaError_t hipError_t
