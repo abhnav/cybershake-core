@@ -16,7 +16,7 @@ __global__ void dstrqc(float* xx, float* yy,    float* zz,    float* xy,    floa
                        float* r1, float* r2,    float* r3,    float* r4,    float* r5,     float* r6,
                        float* u1, float* v1,    float* w1,    float* lam,   float* mu,     float* qp,
                        float* qs, float* dcrjx, float* dcrjy, float* dcrjz, float* lam_mu, int NX,
-                       int rankx, int ranky,    int s_i,      int e_i,      int s_j);
+                       int rankx, int ranky,    int s_i,      int e_i,      int s_j, float* p_vx1, float* p_vx2);
 
 __global__ void ComputeSGT_cu(float* xx,   float* yy,    float* zz,    float* xy,    float* xz,     float* yz,
                               float* sg1,  float* sg2,   float* mu,    int sgt_numsta, int* sgt_sta,float* sgtBuf,

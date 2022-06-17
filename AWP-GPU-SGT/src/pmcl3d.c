@@ -31,7 +31,7 @@ void dstrqc_H(float* xx,       float* yy,     float* zz,    float* xy,    float*
               float* u1,       float* v1,     float* w1,    float* lam,   float* mu, float* qp,
               float* qs,       float* dcrjx,  float* dcrjy, float* dcrjz, int nyt,   int nzt, 
               cudaStream_t St, float* lam_mu, int NX,       int rankx,    int ranky, int s_i,  
-              int e_i,         int s_j,       int e_j,      int rank);
+              int e_i,         int s_j,       int e_j,      int rank, float* d_vx1, float* d_vx2);
 void addsrc_H(int i,      int READ_STEP, int dim,    int* psrc,  int npsrc,  cudaStream_t St,
               int igreen, int nzt, 
               float* d1,     float* u1,  float* v1,  float* w1,
@@ -661,7 +661,9 @@ rank, READ_STEP, READ_STEP_GPU, NST, IFAULT);
     cudaMalloc((void**)&d_vx2, num_bytes);
     cudaMemset(d_vx2, 0, num_bytes);
     cudaMemcpy(d_vx2,&vx2[0][0][0],num_bytes,cudaMemcpyHostToDevice);
-    BindArrayToTexture(d_vx1, d_vx2, num_bytes);
+
+    /*BindArrayToTexture(d_vx1, d_vx2, num_bytes);*/
+
     if(NPC==0)
     {
     	num_bytes = sizeof(float)*(nxt+4+8*loop);
@@ -874,7 +876,7 @@ rank, READ_STEP, READ_STEP_GPU, NST, IFAULT);
 	 //stress computation whole 3D Grid (nxt+4, nyt+4, nzt)
          dstrqc_H(d_xx, d_yy, d_zz, d_xy,    d_xz,    d_yz,    d_r1, d_r2, d_r3,     d_r4,     d_r5, d_r6,     d_u1, d_v1, d_w1, d_lam,
                   d_mu, d_qp, d_qs, d_dcrjx, d_dcrjy, d_dcrjz, nyt,  nzt,  stream_i, d_lam_mu, NX,   coord[0], coord[1],   xls,  xre,
-                  yls,  yre, rank);
+                  yls,  yre, rank, d_vx1, d_vx2);
          //update source input
         //**Below was added in 2021 as part of BBP verification work**
 		if (IFAULT==5) {
@@ -1208,7 +1210,7 @@ printf("xx,yy,zz,xy,xz,yz=%f,%f,%f,%f,%f,%f\naxx,yy,zz,xy,xz,yz=%f,%f,%f,%f,%f,%
 //  Main Loop Ends
  
 //  program ends, free all memories
-    UnBindArrayFromTexture();
+    /*UnBindArrayFromTexture();*/
     Delloc3D(u1);
     Delloc3D(v1);
     Delloc3D(w1); 

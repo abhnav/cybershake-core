@@ -119,7 +119,7 @@ void dstrqc_H(float* xx,       float* yy,     float* zz,    float* xy,    float*
               float* u1,       float* v1,     float* w1,    float* lam,   float* mu, float* qp,
               float* qs,       float* dcrjx,  float* dcrjy, float* dcrjz, int nyt,   int nzt, 
               cudaStream_t St, float* lam_mu, int NX,       int rankx,    int ranky, int  s_i,  
-              int e_i,         int s_j,       int e_j,      int rank)
+              int e_i,         int s_j,       int e_j,      int rank, float* p_vx1, float* p_vx2)
 {
     dim3 block (BLOCK_SIZE_Z, BLOCK_SIZE_Y, 1);
     dim3 grid ((nzt+BLOCK_SIZE_Z-1)/BLOCK_SIZE_Z, (e_j-s_j+1+BLOCK_SIZE_Y-1)/BLOCK_SIZE_Y,1);
@@ -128,7 +128,7 @@ void dstrqc_H(float* xx,       float* yy,     float* zz,    float* xy,    float*
     if(err != cudaSuccess) printf("CUDA KERNEL ERROR! rank=%d dstrqc, before kernel: %s\n",rank,cudaGetErrorString(err));
     dstrqc<<<grid, block, 0, St>>>(xx,    yy,    zz,  xy,  xz, yz, r1, r2,    r3,    r4,    r5,     r6, 
                                    u1,    v1,    w1,  lam, mu, qp, qs, dcrjx, dcrjy, dcrjz, lam_mu, NX, 
-                                   rankx, ranky, s_i, e_i, s_j);
+                                   rankx, ranky, s_i, e_i, s_j, p_vx1, p_vx2);
     err = cudaGetLastError();
     if(err != cudaSuccess) printf("CUDA KERNEL ERROR! rank=%d dstrqc: %s\n",rank,cudaGetErrorString(err));
     return;
@@ -717,7 +717,7 @@ __global__ void dstrqc(float* xx, float* yy,    float* zz,    float* xy,    floa
                        float* r1, float* r2,    float* r3,    float* r4,    float* r5,     float* r6,
                        float* u1, float* v1,    float* w1,    float* lam,   float* mu,     float* qp,
                        float* qs, float* dcrjx, float* dcrjy, float* dcrjz, float* lam_mu, int NX,    
-                       int rankx, int ranky,    int s_i,      int e_i,      int s_j)
+                       int rankx, int ranky,    int s_i,      int e_i,      int s_j, float* p_vx1, float * p_vx2)
 {
     register int   i,  j,  k,  g_i;
     register int   pos,     pos_ip1, pos_im2, pos_im1;
@@ -750,8 +750,11 @@ __global__ void dstrqc(float* xx, float* yy,    float* zz,    float* xy,    floa
     f_dcrjy = dcrjy[j];
     for(i=e_i;i>=s_i;i--)
     {
-        f_vx1    = tex1Dfetch(p_vx1, pos);
-        f_vx2    = tex1Dfetch(p_vx2, pos);
+        //f_vx1    = tex1Dfetch(p_vx1, pos);
+        //f_vx2    = tex1Dfetch(p_vx2, pos);
+        f_vx1    = p_vx1[pos];
+        f_vx2    = p_vx2[pos];
+
         f_dcrj   = dcrjx[i]*f_dcrjy*f_dcrjz;
 
         pos_km2  = pos-2;
