@@ -3,8 +3,9 @@
 #SBATCH --output="awpgpu.%j.%N.out"
 #SBATCH --partition=gpu
 #SBATCH --nodes=1
-#SBATCH --gpus=4
-#SBATCH --mem=377393M
+#SBATCH --gpus=1
+#SBATCH --ntasks-per-node=2
+#SBATCH --mem=37739M
 #SBATCH --account=ddp408
 #SBATCH --no-requeue
 #SBATCH -t 00:30:00
@@ -13,5 +14,7 @@ module purge
 module load gpu
 module load slurm
 module load openmpi
-module load intel-mpi
-../bin/pmcl3d -T 20.0 --IGREEN 1 --DH 200.0 --DT 0.01 --NSRC 1 --NST 20000 -X 600 -Y 560 -Z 200 -x 1 -y 1 --NPC 0 --ARBC 0.92 --ND 80 --IFAULT 0 --MEDIASTART 2 --FL 0.01 --FH 25.0 --FP 1.0 --READ_STEP 20000 --WRITE_STEP 2000 -o comp_x/output_sgt --INSGT comp_x/input/awp.SMALL.cordfile -c comp_x/output_ckp/CHKP96PV --INSRC comp_x/input/SMALL_fx_src --INVEL comp_x/input/awp.SMALL.smoothed.media --NTISKP_SGT 10 --NTISKP 1000
+srun -n 2 ../bin/pmcl3d -T 20.0 --IGREEN 1 --DH 200.0 --DT 0.01 --NSRC 1 --NST 2000 -X 600 -Y 560 -Z 200 -x 1 -y 1 --NPC 0 --ARBC 0.92 --ND 80 --IFAULT 0 --MEDIASTART 2 --FL 0.01 --FH 25.0 --FP 1.0 --READ_STEP 20000 --WRITE_STEP 100 -o comp_x/output_sgt --INSGT comp_x/input/awp.SMALL.cordfile -c comp_x/output_ckp/CHKP96PV --INSRC comp_x/input/SMALL_fx_src --INVEL comp_x/input/awp.SMALL.smoothed.media --NTISKP_SGT 20 --NTISKP 40000
+
+#srun  --partition=gpu-shared  --pty --gpus=1 --account=ddp408 --nodes=1 --ntasks-per-node=2 --mem=40G -t 00:30:00 --wait=0 --export=ALL /bin/bash
+# what is pmi2, pmix?

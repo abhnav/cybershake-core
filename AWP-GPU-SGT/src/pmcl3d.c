@@ -989,10 +989,10 @@ printf("xx,yy,zz,xy,xz,yz=%f,%f,%f,%f,%f,%f\naxx,yy,zz,xy,xz,yz=%f,%f,%f,%f,%f,%
             cudaThreadSynchronize();
             sprintf(filename, "%s%07ld", filenamebasex, cur_step);
             err = MPI_File_open(MCW,filename,MPI_MODE_CREATE|MPI_MODE_WRONLY,MPI_INFO_NULL,&fh);
-	    if (err!=MPI_SUCCESS) {
-			printf("Error on open: %d\n", err);
-			exit(1);
-		}
+            if (err!=MPI_SUCCESS) {
+                        printf("Error on open: %d\n", err);
+                        exit(1);
+            }
             err = MPI_File_set_view(fh, displacement, MPI_FLOAT, filetype, "native", MPI_INFO_NULL);
             if (err!=MPI_SUCCESS) {
                         printf("Error on set view: %d\n", err);
