@@ -7,23 +7,25 @@ HIP_PLATFORM=$(shell $(HIP_PATH)/bin/hipconfig --platform)
 CPPFLAGS += $(shell $(HIP_PATH)/bin/hipconfig --cpp_config)
 
 HIPCC=$(HIP_PATH)/bin/hipcc
-HIPLIB=$(HIP_PATH)/lib
-ROCLIB=$(ROCM_PATH)/lib
 
 # export OMPI_CXX=amdclang
 #
 CC      = mpic++
-#LD      = mpic++
-#CFLAGS = -O3 -g -D__HIP -x hip
-
 #CC      = $(HIPCC)
-LD      = $(HIPCC)
 
-#LDFLAGS = -g -D__HIP  -L$(MPI_HOME)/lib -L"/opt/rocm-4.5.0/hip/lib" -O3 -lgcc_s -lgcc -lpthread -lm -lrt
+LD      = $(HIPCC)
+#LD      = mpic++
+
+# Link the MPI library when using hipcc. The flags can be obtained using "mpic++ -link-info"
 LDFLAGS = -Wl,-Bsymbolic-functions -Wl,-z,relro -I/usr/include/mpich -L/usr/lib/x86_64-linux-gnu -lmpichcxx -lmpich
+# Link the hip library when using mpic++. The flags can be obtained using hipconfig
+#LDFLAGS = -g -D__HIP  -L$(MPI_HOME)/lib -L"/opt/rocm-4.5.0/hip/lib" -O3 -lgcc_s -lgcc -lpthread -lm -lrt
+
+CFLAGS = -O3 -g -D__HIP
 #CFLAGS = -O3 -g -D__HCC__ -D__HIP_PLATFORM_HCC__
 #CFLAGS = -O3 -g -D__HIP -D__HCC__ -D__HIP_PLATFORM_HCC__
-CFLAGS = -O3 -g -D__HIP
+#CFLAGS = -O3 -g -D__HIP -x hip
+
 GFLAGS = $(HIPCC) -D__HIP -x hip
 
 INCDIR  = -I$(MPI_HOME)/include $(CPPFLAGS)
